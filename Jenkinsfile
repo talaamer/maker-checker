@@ -1,11 +1,14 @@
 pipeline {
     agent any
 
+    parameters {
+        choice(name: 'TARGET_ENV', choices: ['dev', 'prod'], description: 'Select deployment target')
+    }
+
     environment {
         JAVA_HOME = 'C:\\Users\\D-12\\Downloads\\jdk-21.0.11'
         PATH = "${JAVA_HOME}\\bin;${env.PATH}"
         IMAGE_NAME = 'maker-checker'
-        IMAGE_TAG = 'latest'
     }
 
     stages {
@@ -15,7 +18,7 @@ pipeline {
             }
         }
 
-        stage('Build') {
+        stage('Build and Test') {
             steps {
                 bat 'gradlew.bat clean test bootJar'
             }
@@ -23,14 +26,19 @@ pipeline {
 
         stage('Docker Build') {
             steps {
-                bat "docker build -t ${IMAGE_NAME}:${IMAGE_TAG} ."
+                bat "docker build -t ${IMAGE_NAME}:${params.TARGET_ENV} ."
             }
         }
 
-        stage('Docker Run') {
+        stage('Deploy') {
             steps {
-                bat "docker rm -f ${IMAGE_NAME} || exit 0"
-                bat "docker run -d --name ${IMAGE_NAME} -p 8080:8080 ${IMAGE_NAME}:${IMAGE_TAG}"
+                script {
+                    if (params.TARGET_ENV == 'dev') {
+                        echo 'Deploying to development environment'
+                    } else {
+                        echo 'Deploying to production environment'
+                    }
+                }
             }
         }
     }
