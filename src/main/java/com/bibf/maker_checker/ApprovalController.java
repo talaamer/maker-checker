@@ -26,6 +26,14 @@ public class ApprovalController {
 				.toList();
 	}
 
+	@GetMapping("/requests")
+	public List<LoanRequestResponse> getAllRequests() {
+		return decisions.entrySet().stream()
+				.sorted(Map.Entry.comparingByKey())
+				.map(entry -> new LoanRequestResponse(entry.getKey(), entry.getValue().customerName(), entry.getValue().amount(), entry.getValue().status(), entry.getValue().note()))
+				.toList();
+	}
+
 	@PostMapping("/requests")
 	public ResponseEntity<LoanRequestResponse> createLoanRequest(@RequestBody(required = false) LoanRequest request) {
 		Long loanId = (long) (decisions.size() + 1);

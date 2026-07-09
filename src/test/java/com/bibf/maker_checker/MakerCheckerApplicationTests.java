@@ -73,6 +73,22 @@ class MakerCheckerApplicationTests {
 	}
 
 	@Test
+	void requestsEndpointReturnsAllRequestsIncludingDecisions() throws Exception {
+		mockMvc.perform(post("/approval/requests")
+					.contentType(MediaType.APPLICATION_JSON)
+					.content("{\"customerName\":\"Amy\",\"amount\":12000,\"note\":\"Need review\"}"))
+				.andExpect(status().isOk());
+
+		mockMvc.perform(post("/approval/1/approve"))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.status").value("APPROVED"));
+
+		mockMvc.perform(get("/approval/requests"))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$[0].status").value("APPROVED"));
+	}
+
+	@Test
 	void rejectLoanAcceptsOptionalNote() throws Exception {
 		mockMvc.perform(post("/approval/4/reject")
 					.contentType(MediaType.APPLICATION_JSON)

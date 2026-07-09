@@ -204,8 +204,8 @@
         element.style.borderColor = isError ? '#fecaca' : '#bfdbfe';
       }
 
-      async function fetchPendingRequests() {
-        const response = await fetch('/approval/pending');
+      async function fetchAllRequests() {
+        const response = await fetch('/approval/requests');
         if (!response.ok) throw new Error('Could not load requests');
         return response.json();
       }
@@ -242,8 +242,8 @@
 
       async function refreshViews() {
         try {
-          const pending = await fetchPendingRequests();
-          const mapped = pending.map(item => ({
+          const allRequests = await fetchAllRequests();
+          const mapped = allRequests.map(item => ({
             loanId: item.loanId,
             customerName: item.customerName || 'Unknown',
             amount: item.amount || 0,
@@ -274,13 +274,14 @@
       }
 
       function renderApprovalQueue() {
-        if (!state.requests.length) {
+        const pendingRequests = state.requests.filter(item => item.status === 'PENDING');
+        if (!pendingRequests.length) {
           approvalQueue.innerHTML = '<div class="empty">No pending requests right now.</div>';
           return;
         }
-        approvalQueue.innerHTML = state.requests.map(item => `
+        approvalQueue.innerHTML = pendingRequests.map(item => `
           <div class="request-card">
-            <div class="row"><strong>#${item.loanId} · ${item.customerName}</strong><span class="pill ${item.status.toLowerCase()}">${item.status}</span></div>
+            <div class="row"><strong>#${item.loanId} · ${item.customerName}</strong><span class="pill pending">PENDING</span></div>
             <div class="status">Amount: ${Number(item.amount).toLocaleString()}</div>
             <div class="status">${item.note ? item.note : 'No note provided'}</div>
             <div class="row">
